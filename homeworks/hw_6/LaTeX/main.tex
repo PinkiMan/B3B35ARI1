@@ -1,0 +1,124 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath}
+\usepackage{fancyhdr}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+
+\pagestyle{fancy}
+
+\title{ARI-HW\_06}
+\author{Matěj Pinkas}
+\date{30. March 2024}
+
+\lhead{Pinkas Matěj}
+\chead{ARI-HW\_06}
+\rhead{30. March 2024}
+
+\begin{document}
+
+\maketitle
+
+\section{Návrh PID regulátoru}
+\begin{itemize}
+    \item[-] Soustava s přenosem: \\
+    \begin{align*}
+        F(s) = \frac{a+s}{b+s^2} = \frac{b(s)}{a(s)}
+    \end{align*}
+    \item Navrhněte PID regulátor s póly: 
+    \begin{align*}
+        s_1 &= -1 &s_{2,3} = -0,5\pm j0,5
+    \end{align*}
+
+    \tikzstyle{block} = [draw, rectangle, 
+    minimum height=3em, minimum width=3em]
+\tikzstyle{sum} = [draw, circle, node distance=1cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{pinstyle} = [pin edge={to-,thin,black}]
+\tikzstyle{tmp} = [coordinate] 
+
+\begin{figure}[h]
+    \centering
+    
+    \begin{tikzpicture}[auto, node distance=1.1cm,>=latex']
+        \node [input, name=input] {};
+        \node [sum, right of=input] (sum1) {};
+        \node [block, right of=sum1,node distance=1.3cm] (PID) {PID$(s)$};
+        \node [block, right of=PID,node distance=2cm] (F) {$\frac{s+4}{s^2+2}$}; 
+        \node [tmp, right of=F] (tmp1) {};
+        \node [output, right of=tmp1] (output) {};
+        \node [tmp, below of=PID] (tmp2) {};
+        
+        \draw [draw,->] (input) -- node {$u(s)$} (sum1);
+        \draw [->] (sum1) -- node {} (PID);
+        \draw [->] (PID) -- node {} (F);
+        \draw [->] (F) -- node [name=y] {$y(s)$}(output);
+        \draw [->] (tmp1) |- (tmp2)-| node {} (sum1);
+    \end{tikzpicture}
+
+   
+    \caption{Systém}
+    \label{fig:System_3}
+\end{figure}
+
+
+    
+    \item[-] Přenos PID regulátoru:
+    \begin{align*}
+        C(s) = \frac{q(s)}{p(s)} = k_P+k_Ds+\frac{k_I}{s} = \frac{k_Ds^2+k_Ps+k_I}{s}
+    \end{align*}
+
+    \item[-] Přenos celé uzavřemé smyčky soustavy:
+
+    \begin{align*}
+        T(s) &=  \frac{C(s)F(s)}{1+C(s)F(s)} = \frac{b(s)q(s)}{a(s)p(s)}\frac{a(s)p(s)}{a(s)p(s)+b(s)q(s)} = \frac{\frac{s+a}{s^2+b}\frac{k_Ds^2+k_Ps+k_I}{s}}{1+\frac{s+a}{s^2+b}\frac{k_Ds^2+k_Ps+k_I}{s}} =\\
+        &=\frac{(s+a)}{s^2+b}\frac{(k_Ds^2+k_Ps+k_I)}{s}\frac{s(s^2+b)}{(k_Ds^2+k_Ps+k_I)(s+a)+s(s^2+b)}
+    \end{align*}
+
+    \item[-] Charakteristický polynom: 
+    
+    \begin{align*}
+        c(s) &= (s^2+b)s((k_Ds^2+k_Ps+k_I)(s+a)+s(s^2+b))
+    \end{align*}
+
+    \item[-] Pro hodnoty $a$, $b$ z mého datumu narození ($a=0$, $b=1$) (10.1.), následného vyřešení konstant $k_P$, $k_D$, $k_I$ a dosazení vychází $c(s)=0$, nesplňuje tedy podmínky pólů $s_{1,2,3}$
+
+    \item[-] Zvolím si tedy datum podle svého svátku ($a=4$, $b=2$) (24.2.)
+    \item[-] Charakteristický polynom po dosazení $a$, $b$: 
+    \begin{align*}
+        c(s) = s(s^2 + 2)(s(s^2 + 2) + (s + 4)(k_Ds^2 + k_Ps + k_I))\\
+    \end{align*}
+    \item[-] Pro póly $s_{1,2,3}$ musí platit, že po dosazení se bude polynom $c(s)$ rovnat nule, mám tedy tyto 3 rovnice:
+    \begin{align*}
+        c(s_1) &= 9k_P - 9k_I - 9k_D + 9 = 0\\
+        c(s_2) &= k_D(2 - i\frac{13}{8}) - k_I(\frac{13}{4}+ i4) - k_P(\frac{3}{8} - i\frac{29}{8}) - 1 + i\frac{15}{8} = 0\\
+        c(s_3) &= k_D(2 + i\frac{13}{8}) - k_I(\frac{13}{4}- i4) - k_P(\frac{3}{8} + i\frac{29}{8}) - 1 - i\frac{15}{8} = 0
+    \end{align*}
+
+    \item[-] Po vyřešení této soustavy rovnic získám $k_P$, $k_D$, $k_I$:
+
+    \begin{align*}
+        k_P&= \frac{4}{25} & k_D&=\frac{23}{25} & k_I&=\frac{6}{25}
+    \end{align*}
+
+    \item[-] Po dosazení konstant $k_P$, $k_D$, $k_I$ do char. polynomu $c(s)$ získám:
+    \begin{align*}
+        c(s) = s(s^2 + 2)(s(s^2 + 2) + (s + 4)\left(\frac{23}{25}s^2+ \frac{4}{25}s + \frac{6}{25}\right)
+    \end{align*}
+    \item[-] Spočítám kořeny tohoto polynomu pro ověření (pomocí funkce roots() v matlabu) a ověřím, že některé z těchto kořenů odpovídají $s_{1,2,3}$
+    \begin{align*}
+        s_1 &= -1\\
+        s_2 &= 0\\
+        s_3 &= - 0,5 - i0,5\\
+        s_4 &= - 0,5 + i0,5\\
+        s_5 &= -i\sqrt{2}\\
+        s_6 &= i\sqrt{2}
+    \end{align*}
+    \item[-] Tento PID regulátor je tedy vhodný, splňuje zadané podmínky a má konstanty $k_P= \frac{4}{25}$, $k_D=\frac{23}{25}$, $k_I=\frac{6}{25}$
+    
+\end{itemize}
+
+
+
+\end{document}

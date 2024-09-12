@@ -1,0 +1,290 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{textgreek}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+\usepackage{verbatim}
+
+% vnořené popisky obrázků
+\usepackage{subcaption}
+
+% automatická konverze EPS 
+\usepackage{graphicx} 
+\usepackage{epstopdf}
+
+\pagestyle{fancy}
+
+
+\newcommand\mat[1]{\begin{bmatrix}#1\end{bmatrix}}
+\newcommand\pdiff[2]{\frac{\partial #1}{\partial #2}}
+
+\title{ARI-HW\_05}
+\author{Matěj Pinkas}
+\date{23. March 2024}
+
+\lhead{Pinkas Matěj}
+\chead{ARI-HW\_05}
+\rhead{23. March 2024}
+
+
+\begin{document}
+
+\maketitle
+
+\section{Vzájemná stabilita systémů}
+\begin{itemize}
+    \item[-] Porovnejte systémy
+    \item[-] Zjistěte, jaký mezi sytémy může být rozdíl z hlediska stability 
+    \item[-] Najděte podmínky stability každého z nich, porovnejte je a případné rozdíly porovnejte 
+\end{itemize}
+
+
+
+\tikzstyle{block} = [draw, rectangle, 
+    minimum height=3em, minimum width=3em]
+\tikzstyle{sum} = [draw, circle, node distance=1cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{pinstyle} = [pin edge={to-,thin,black}]
+\tikzstyle{tmp} = [coordinate] 
+
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[auto, node distance=1.5cm,>=latex']
+        % We start by placing the blocks
+        \node [input, name=input] {};
+        \node [block, right of=input] (controller1) {$\frac{r(s)}{p(s)}$};
+        \node [sum, right of=controller1] (sum) {};
+        \node [block, right of=sum,
+                node distance=1.5cm] (system) {$\frac{b(s)}{a(s)}$};
+        % We draw an edge between the controller and system block to 
+        % calculate the coordinate u. We need it to place the measurement block. 
+        \draw [->] (sum) -- node[name=u] {$ $} (system);
+        \node [output, right of=system] (output) {};
+        \node [block, below of=system] (measurements) {$q(s)$};
+    
+        % Once the nodes are placed, connecting them is easy. 
+        \draw [draw,->] (input) -- node {$y_r(s)$} (controller1);
+        \draw [->] (controller1) -- node {$ $} (sum);
+        \draw [->] (system) -- node [name=y] {$y(s)$}(output);
+        \draw [->] (y) |- (measurements);
+        \draw [->] (measurements) -| node[pos=0.95] {$-$} 
+            node [near end] {$ $} (sum);
+    \end{tikzpicture}
+
+    \caption{Systém 1}
+    \label{fig:System_1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    % The block diagram code is probably more verbose than necessary
+    \begin{tikzpicture}[auto, node distance=1.5cm,>=latex']
+        % We start by placing the blocks
+        \node [input, name=input] {};
+        \node [block, right of=input] (controller1) {$r(s)$};
+        \node [sum, right of=controller1] (sum) {};
+        \node [block, right of=sum] (controller) {$\frac{1}{p(s)}$};
+        \node [block, right of=controller,
+                node distance=1.5cm] (system) {$\frac{b(s)}{a(S)}$};
+        % We draw an edge between the controller and system block to 
+        % calculate the coordinate u. We need it to place the measurement block. 
+        \draw [->] (controller) -- node[name=u] {$ $} (system);
+        \node [output, right of=system] (output) {};
+        \node [block, below of=u] (measurements) {$q(s)$};
+    
+        % Once the nodes are placed, connecting them is easy. 
+        \draw [draw,->] (input) -- node {$y_r(s)$} (controller1);
+        \draw [->] (controller1) -- node {$ $} (sum);
+        \draw [->] (sum) -- node {$e(s)$} (controller);
+        \draw [->] (system) -- node [name=y] {$y(s)$}(output);
+        \draw [->] (y) |- (measurements);
+        \draw [->] (measurements) -| node[pos=0.95] {$-$} 
+            node [near end] {$ $} (sum);
+    \end{tikzpicture}
+    \caption{Systém 2}
+    \label{fig:System_2}
+\end{figure}
+
+
+
+\subsection{Standardní výpočet}
+%-----------------------------------------------------------------------
+%1.1.1
+\subsubsection{Přenos systému 1}
+\begin{align*}
+    & y = (y_r\frac{r(s)}{p(s)}-y\frac{q(s)}{p(s)})\frac{b(s)}{a(s)}\\
+    & y[1+\frac{b(s)q(s)}{a(s)p(s)}] = y_r\frac{b(s)r(s)}{a(s)p(s)}\\
+    G_1(s) = & \frac{y}{y_r} = \frac{b(s)r(s)}{a(s)p(s)}\frac{a(s)p(s)}{a(s)p(s)+b(s)q(s)}
+\end{align*}
+
+%-----------------------------------------------------------------------
+%1.1.2
+\subsubsection{Přenos systému 2}
+\begin{align*}
+    y &= (y_rr(s)-yq(s))\frac{1}{p(s)}\frac{b(s)}{a(s)}\\
+    & y[p(s)+\frac{b(s)q(s)}{a(s)}] = y_r \frac{b(s)r(s)}{a(s)}\\
+    G_2 = \frac{y}{y_r} &= \frac{b(s)q(s)}{a(s)}\frac{a(s)}{a(s)p(s)+b(s)q(s)}
+\end{align*}
+
+%-----------------------------------------------------------------------
+%1.2
+\subsection{Alternativní výpočet}
+\begin{itemize} 
+    \item[-] Rozdělím systém na uzavřenou smyčku T a předřazený polynom na vtupu
+    \begin{align*}
+        G(s) = C(s)T(s)
+    \end{align*}
+\end{itemize}
+
+%-----------------------------------------------------------------------
+%1.2.1
+\subsubsection{Přenost uzavřené smyčky systému 1}
+\begin{align*}
+    & (u-\frac{q(s)}{p(s)}y)\frac{b(s)}{a(s)} = y\\
+    & y(1+\frac{q(s)}{p(s)}\frac{b(s)}{a(s)}) = u\frac{b(s)}{a(s)}\\
+    T_1 &= \frac{y}{u} = \frac{b(q)p(s)}{a(s)p(s)+b(s)q(s)}
+\end{align*}
+
+%-----------------------------------------------------------------------
+%1.2.2
+\subsubsection{Přenost systému 1}
+\begin{align*}
+    G_1(s) &= C_1(s)T_1(s)\\
+    G_1(s) &= \frac{r(s)}{p(s)}\frac{b(q)p(s)}{a(s)p(s)+b(s)q(s)}
+\end{align*}
+
+%-----------------------------------------------------------------------
+%1.2.3
+\subsubsection{Přenost uzavřené smyčky systému 2}
+\begin{align*}
+    & (u-q(s)y)\frac{1}{p(s)}\frac{b(s)}{a(s)} = y\\
+    & y(1+\frac{q(s)}{p(s)}\frac{b(s)}{a(s)}) = u\frac{1}{p(s)}\frac{b(s)}{a(s)}\\
+    T_2 &= \frac{y}{u} = \frac{b(q)}{a(s)p(s)+b(s)q(s)}
+\end{align*}
+
+%-----------------------------------------------------------------------
+%1.2.4
+\subsubsection{Přenost systému 2}
+\begin{align*}
+    G_2(s) &= C_2(s)T_2(s)\\
+    G_2(s) &= r(s)\frac{b(q)}{a(s)p(s)+b(s)q(s)}
+\end{align*}
+
+
+
+\vspace{4pt}
+    \hrule
+\vspace{4pt}
+  
+
+\begin{align*}
+    CH.P_1: & p(s)(a(s)p(s)+b(s)q(s))\\
+    CH.P_2: & a(s)p(s)+b(s)q(s)
+\end{align*}
+
+
+\begin{itemize}
+    \item[-] Přenosové funkce obou systémů jsou stejné, ale v charakteristickém polynomu se systémy liší členem: $\frac{1}{p(s)}$
+    \item[-] 1. systém má skrytý mód a to v $\frac{1}{p(s)}$
+    \item[-] Kvůli módu systému 1 je systém méně stabilní než systém 2 a to v bodech nestability $\frac{1}{p(s)}$
+\end{itemize}
+
+
+\newpage
+%-----------------------------------------------------------------------
+%2
+\section{Příklad}
+\begin{itemize}
+    \item[-] Chování s přenosem: $P = P_1(s)P_2(s)$
+    \begin{align*}
+        P_1(s) &= \frac{s+2}{s+1}
+        & P_2(s) = \frac{1}{s-1}
+    \end{align*}
+    \item[-] Navrhněte přímovazební ($F(s)$) a zpětnovazební ($C(s)$) část regulátoru, tak aby porucha co nejméně ovnlivňovala výstup soustavy a aby byl systém stabilní
+    \item[-] Vypočtěte přenos poruchy na výstup soustavy
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    
+    \begin{tikzpicture}[auto, node distance=2cm,>=latex']
+        \node [input, name=input] {};
+        \node [sum, right of=input] (sum1) {};
+        \node [block, right of=sum1] (C) {$C(s)$};
+        \node [sum, right of=C,node distance=2cm] (sum2) {};
+        \node [block, right of=sum2,node distance=2cm] (P1) {$P_1(s)$}; 
+        \node [sum, right of=P1, node distance=2cm] (sum3) {};
+        \node [block, above of=P1] (F) {$-F(s)$};
+        \node [tmp, right of=F] (tmp3) {};
+        \node [input, above of=tmp3] (input2) {$d(s)$};
+        \node [block, right of=sum3,node distance=2cm] (P2) {$P2(s)$};
+        \node [output, right of=P2] (output) {};
+        \node [tmp, below of=C] (tmp1) {};
+        \node [tmp, above of=sum2] (tmp2) {};
+        \node [tmp, right of=F] (tmp3) {};
+        
+        \draw [draw,->] (input) -- node {$y_r(s)$} (sum1);
+        \draw [->] (sum1) -- node {} (C);
+        \draw [->] (C) -- node {} (sum2);
+        \draw [->] (sum2) -- node {} (P1);
+        \draw [->] (P1) -- node {} (sum3);
+        \draw [->] (sum3) -- node {} (P2);
+        \draw [->] (P2) -- node [name=y] {$y(s)$}(output);
+        \draw [->] (input2) -- node[pos=0.1] {$d(s)$} (sum3);
+        \draw [->] (input2) |- (tmp3)|- (F);
+        \draw [->] (F) -| (tmp2)-| (sum2);
+        \draw [->] (y) |- (tmp1)-| node[pos=0.95] {$-$} (sum1);
+    \end{tikzpicture}
+
+   
+    \caption{Systém}
+    \label{fig:System_3}
+\end{figure}
+
+
+
+
+\subsection{Přenos systému}
+\begin{align*}
+    y &= (((y_r-y)C(s)-F(s)d(s))P_1(s)+d(s))P_2(s)\\
+    y &= y_rC(s)P_1(s)P_2(s)-yC(s)P_1(s)P_2(s)-F(s)d(s)P_1(s)P_2(s)+d(s)P_2(s)
+\end{align*}
+
+\begin{align*}
+    y[1+C(s)P_1(s)P_2(s)] = y_rC(s)P_1(s)P_2(s)-F(s)d(s)P_1(s)P_2(s)+d(s)P_2(s)
+\end{align*}
+
+\begin{align*}
+    y &= \frac{y_rC(s)P_1(s)P_2(s)-F(s)d(s)P_1(s)P_2(s)+d(s)P_2(s)}{1+C(s)P_1(s)P_2(s)}
+\end{align*}
+
+\subsection{Přenos poruchy na výstup}
+\begin{itemize}
+    \item[] Výpočet ze vzorce:
+    \begin{align*}
+        T_{yd}(s) = \frac{P_2(s)(1-P_1(s)F(S))}{1+C(s)P_1(s)P_2(s)}\\
+    \end{align*}
+    \item[] Přímovazební část regulátoru:
+    \begin{align*}
+        1-P_1(s)F(s) = 0\\
+        F(s) = P_1(s)^{-1} = \frac{s+1}{s+2}\\
+    \end{align*}
+
+    \item[] Zpětnovazební část regulátoru:
+    \begin{align*}
+        \frac{1}{1+C(s)P_1(s)P_2(s)} = 0\\
+        1+C(s)P_1(s)P_2(s) = \infty \rightarrow C(s) \approx \infty
+    \end{align*}
+
+    \item[-] Při potlačení poruchy na výstup nastavíme v ideálním případě $F(s) = \frac{s+1}{s+2}$ a $C(s)$ co největší při zachování smyslupného výstupu (rozumně velké C(s))
+\end{itemize}
+    
+
+\end{document}
